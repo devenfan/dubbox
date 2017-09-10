@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2012 Alibaba Group.
+ * Copyright 1999-2011 Alibaba Group.
  *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,10 @@ package com.alibaba.dubbo.examples.aop.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.dubbo.examples.aop.api.AopAnnotationService;
+import com.alibaba.dubbo.rpc.RpcContext;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author dylan
@@ -24,9 +28,10 @@ import com.alibaba.dubbo.examples.aop.api.AopAnnotationService;
 @Service
 public class AopAnnotationServiceImpl implements AopAnnotationService {
 
+
     public String sayHello(String name) {
-        System.out.println("aop provider received: " + name);
-        return "aop annotation: hello, " + name;
+        System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] Hello " + name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+        return "Aop annotation: hello, Hello " + name + ", response form provider: " + RpcContext.getContext().getLocalAddress();
     }
 
 }

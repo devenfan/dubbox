@@ -15,7 +15,16 @@
  */
 package com.alibaba.dubbo.remoting.http.jetty;
 
+import com.alibaba.dubbo.common.Constants;
+import com.alibaba.dubbo.common.URL;
+import com.alibaba.dubbo.common.logger.Logger;
+import com.alibaba.dubbo.common.logger.LoggerFactory;
+import com.alibaba.dubbo.common.utils.NetUtils;
+import com.alibaba.dubbo.remoting.http.HttpHandler;
+import com.alibaba.dubbo.remoting.http.servlet.DispatcherServlet;
 import com.alibaba.dubbo.remoting.http.servlet.ServletManager;
+import com.alibaba.dubbo.remoting.http.support.AbstractHttpServer;
+
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.servlet.Context;
@@ -25,24 +34,15 @@ import org.mortbay.log.Log;
 import org.mortbay.log.StdErrLog;
 import org.mortbay.thread.QueuedThreadPool;
 
-import com.alibaba.dubbo.common.Constants;
-import com.alibaba.dubbo.common.URL;
-import com.alibaba.dubbo.common.logger.Logger;
-import com.alibaba.dubbo.common.logger.LoggerFactory;
-import com.alibaba.dubbo.common.utils.NetUtils;
-import com.alibaba.dubbo.remoting.http.HttpHandler;
-import com.alibaba.dubbo.remoting.http.servlet.DispatcherServlet;
-import com.alibaba.dubbo.remoting.http.support.AbstractHttpServer;
-
 public class JettyHttpServer extends AbstractHttpServer {
 
     private static final Logger logger = LoggerFactory.getLogger(JettyHttpServer.class);
 
-    private Server              server;
+    private Server server;
 
     private URL url;
 
-    public JettyHttpServer(URL url, final HttpHandler handler){
+    public JettyHttpServer(URL url, final HttpHandler handler) {
         super(url, handler);
 
         // modified by lishen
@@ -60,7 +60,7 @@ public class JettyHttpServer extends AbstractHttpServer {
         threadPool.setMinThreads(threads);
 
         SelectChannelConnector connector = new SelectChannelConnector();
-        if (! url.isAnyHost() && NetUtils.isValidLocalHost(url.getHost())) {
+        if (!url.isAnyHost() && NetUtils.isValidLocalHost(url.getHost())) {
             connector.setHost(url.getHost());
         }
         connector.setPort(url.getPort());
@@ -85,7 +85,7 @@ public class JettyHttpServer extends AbstractHttpServer {
             server.start();
         } catch (Exception e) {
             throw new IllegalStateException("Failed to start jetty server on " + url.getAddress() + ", cause: "
-                                            + e.getMessage(), e);
+                    + e.getMessage(), e);
         }
     }
 

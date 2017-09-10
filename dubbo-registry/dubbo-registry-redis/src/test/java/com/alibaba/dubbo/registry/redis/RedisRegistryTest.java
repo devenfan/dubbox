@@ -15,29 +15,29 @@
  */
 package com.alibaba.dubbo.registry.redis;
 
+import com.alibaba.dubbo.common.URL;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.alibaba.dubbo.common.URL;
-
-import java.util.Set;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Set;
+
 /**
  * RedisRegistryTest
- * 
+ *
  * @author tony.chenl
  */
 public class RedisRegistryTest {
 
-    String            service     = "com.alibaba.dubbo.test.injvmServie";
-    URL               registryUrl = URL.valueOf("redis://a:testpass@127.0.0.1:6379/");
-    URL               serviceUrl  = URL.valueOf("redis://redis/" + service
-                                                + "?notify=false&methods=test1,test2");
-    URL               consumerUrl = URL.valueOf("redis://consumer/" + service + "?notify=false&methods=test1,test2");
+    String service = "com.alibaba.dubbo.test.injvmServie";
+    URL registryUrl = URL.valueOf("redis://239.255.255.255/");
+    URL serviceUrl = URL.valueOf("redis://redis/" + service
+            + "?notify=false&methods=test1,test2");
+    URL consumerUrl = URL.valueOf("redis://consumer/" + service + "?notify=false&methods=test1,test2");
     RedisRegistry registry    = new RedisRegistry(registryUrl);
 
     /**
