@@ -15,9 +15,6 @@
  */
 package com.alibaba.dubbo.rpc.protocol.dubbo;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.Version;
@@ -41,6 +38,9 @@ import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.Result;
 import com.alibaba.dubbo.rpc.RpcInvocation;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import static com.alibaba.dubbo.rpc.protocol.dubbo.CallbackServiceCodec.encodeInvocationArgument;
 
 /**
@@ -54,17 +54,11 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
     private static final Logger log = LoggerFactory.getLogger(DubboCodec.class);
 
     public static final String NAME = "dubbo";
-
     public static final String DUBBO_VERSION = Version.getVersion(DubboCodec.class, Version.getVersion());
-
     public static final byte RESPONSE_WITH_EXCEPTION = 0;
-
     public static final byte RESPONSE_VALUE = 1;
-
     public static final byte RESPONSE_NULL_VALUE = 2;
-
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
-
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
 
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
@@ -94,7 +88,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
                                 Constants.DECODE_IN_IO_THREAD_KEY,
                                 Constants.DEFAULT_DECODE_IN_IO_THREAD)) {
                             result = new DecodeableRpcResult(channel, res, is,
-                                    (Invocation)getRequestData(id), proto);
+                                    (Invocation) getRequestData(id), proto);
                             result.decode();
                         } else {
                             result = new DecodeableRpcResult(channel, res,
@@ -190,7 +184,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
 
         Object[] args = inv.getArguments();
         if (args != null)
-            for (int i = 0; i < args.length; i++){
+            for (int i = 0; i < args.length; i++) {
                 out.writeObject(encodeInvocationArgument(channel, inv, i));
             }
         out.writeObject(inv.getAttachments());
