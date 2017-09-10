@@ -125,7 +125,7 @@
 		<logback_version>1.2.2</logback_version>
 		<!-- Test libs -->
 		<junit_version>4.12</junit_version>
-		<easymock_version>3.4</easymock_version>
+		<easymock_version>3.2</easymock_version>
 		<jmockit_version>1.33</jmockit_version>
 
 		<!-- Build args -->
@@ -158,6 +158,9 @@
         <maven_war_plugin_version>2.1.1</maven_war_plugin_version>
         <maven_install_plugin_version>2.3.1</maven_install_plugin_version>
         <maven_deploy_plugin_version>2.7</maven_deploy_plugin_version>
+        <maven_javadoc_plugin_version>2.10.4</maven_javadoc_plugin_version>
+        <maven_assembly_plugin_version>2.6</maven_assembly_plugin_version>
+
 
         <maven-surefire-plugin_version>2.17</maven-surefire-plugin_version>
 	</properties>
@@ -227,21 +230,26 @@
 				<artifactId>zookeeper</artifactId>
 				<version>${zookeeper_version}</version>
 			</dependency>
+            <!--<dependency>-->
+            <!--<groupId>com.github.sgroschupf</groupId>-->
+            <!--<artifactId>zkclient</artifactId>-->
+            <!--<version>${zkclient_version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>com.101tec</groupId>
                 <artifactId>zkclient</artifactId>
                 <version>${zkclient_version}</version>
             </dependency>
 			<!--<dependency>-->
-				<!--<groupId>com.github.sgroschupf</groupId>-->
-				<!--<artifactId>zkclient</artifactId>-->
-				<!--<version>${zkclient_version}</version>-->
+				<!--<groupId>com.netflix.curator</groupId>-->
+				<!--<artifactId>curator-framework</artifactId>-->
+				<!--<version>${curator_version}</version>-->
 			<!--</dependency>-->
-			<dependency>
-				<groupId>com.netflix.curator</groupId>
-				<artifactId>curator-framework</artifactId>
-				<version>${curator_version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-framework</artifactId>
+                <version>${curator_version}</version>
+            </dependency>
 			<dependency>
 				<groupId>redis.clients</groupId>
 				<artifactId>jedis</artifactId>
@@ -277,6 +285,11 @@
 				<artifactId>hessian</artifactId>
 				<version>${hessian_version}</version>
 			</dependency>
+            <!--<dependency>-->
+            <!--<groupId>javax.servlet</groupId>-->
+            <!--<artifactId>javax.servlet-api</artifactId>-->
+            <!--<version>${servlet_version}</version>-->
+            <!--</dependency>-->
 			<dependency>
 				<groupId>javax.servlet</groupId>
 				<artifactId>servlet-api</artifactId>
@@ -511,7 +524,9 @@
 				</configuration>
 			</plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>${maven_source_plugin_version}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -634,9 +649,19 @@
                         <target>${java_target_version}</target>
                         <encoding>${file_encoding}</encoding>
                     </configuration>
-                    <compilerArgs>
-                        <arg>-XX:MaxPermSize=512M</arg>
-                    </compilerArgs>
+                    <!--<compilerArgs>-->
+                        <!--<arg>-XX:MaxPermSize=512M</arg>-->
+                    <!--</compilerArgs>-->
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven_javadoc_plugin_version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven_assembly_plugin_version}</version>
                 </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->

@@ -116,7 +116,7 @@ public class Constants {
 
     public static final int DEFAULT_CORE_THREADS = 0;
 
-    public static final int DEFAULT_THREADS = 200;                    = 200;
+    public static final int DEFAULT_THREADS = 200;
 
     public static final boolean DEFAULT_KEEP_ALIVE = true;
 
@@ -264,16 +264,17 @@ public class Constants {
 
     public static final String SERIALIZATION_KEY = "serialization";
 
-    public static final String EXCHANGER_KEY = "exchanger";
+    // modified by lishen
+    public static final String EXTENSION_KEY = "extension";
 
     // modified by lishen
-    public static final String  KEEP_ALIVE_KEY = "keepalive";
+    public static final String KEEP_ALIVE_KEY = "keepalive";
 
     // modified by lishen
     // TODO change to a better name
-    public static final String  OPTIMIZER_KEY = "optimizer";
+    public static final String OPTIMIZER_KEY = "optimizer";
 
-    public static final String  EXCHANGER_KEY = "exchanger";
+    public static final String EXCHANGER_KEY = "exchanger";
 
     public static final String TRANSPORTER_KEY = "transporter";
 

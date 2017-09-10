@@ -1,5 +1,6 @@
 package com.alibaba.dubbo.remoting.zookeeper.curator;
 
+import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.remoting.zookeeper.ChildListener;
 import com.alibaba.dubbo.remoting.zookeeper.StateListener;
