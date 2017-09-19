@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * dubbo protocol support.
@@ -66,25 +65,16 @@ public class DubboProtocol extends AbstractProtocol {
     public static final String COMPATIBLE_CODEC_NAME = "dubbo1compatible";
 
     public static final int DEFAULT_PORT = 20880;
-
     private static final String IS_CALLBACK_SERVICE_INVOKE = "_isCallBackServiceInvoke";
-
     private static DubboProtocol INSTANCE;
-
-    public final ReentrantLock lock = new ReentrantLock();
-
     private final Map<String, ExchangeServer> serverMap = new ConcurrentHashMap<String, ExchangeServer>(); // <host:port,Exchanger>
-
     private final Map<String, ReferenceCountExchangeClient> referenceClientMap = new ConcurrentHashMap<String, ReferenceCountExchangeClient>(); // <host:port,Exchanger>
-
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap = new ConcurrentHashMap<String, LazyConnectExchangeClient>();
-
     private final Set<String> optimizers = new ConcurrentHashSet<String>();
 
     //consumer side export a stub service for dispatching event
     //servicekey-stubmethods
     private final ConcurrentMap<String, String> stubServiceMethodsMap = new ConcurrentHashMap<String, String>();
-
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
         public Object reply(ExchangeChannel channel, Object message) throws RemotingException {
@@ -383,16 +373,16 @@ public class DubboProtocol extends AbstractProtocol {
                 client.incrementAndGetCount();
                 return client;
             } else {
-//                logger.warn(new IllegalStateException("client is closed,but stay in clientmap .client :"+ client));
                 referenceClientMap.remove(key);
             }
         }
-        ExchangeClient exchagneclient = initClient(url);
-
-        client = new ReferenceCountExchangeClient(exchagneclient, ghostClientMap);
-        referenceClientMap.put(key, client);
-        ghostClientMap.remove(key);
-        return client;
+        synchronized (key.intern()) {
+            ExchangeClient exchangeClient = initClient(url);
+            client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);
+            referenceClientMap.put(key, client);
+            ghostClientMap.remove(key);
+            return client;
+        }
     }
 
     /**
@@ -424,8 +414,7 @@ public class DubboProtocol extends AbstractProtocol {
                 client = Exchangers.connect(url, requestHandler);
             }
         } catch (RemotingException e) {
-            throw new RpcException("Fail to create remoting client for service(" + url
-                    + "): " + e.getMessage(), e);
+            throw new RpcException("Fail to create remoting client for service(" + url + "): " + e.getMessage(), e);
         }
         return client;
     }
