@@ -1,12 +1,13 @@
 /*
- * Copyright 1999-2012 Alibaba Group.
- *  
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +21,10 @@ import com.alibaba.dubbo.common.logger.Logger;
 import com.alibaba.dubbo.common.logger.LoggerFactory;
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.common.utils.ReflectUtils;
-import com.alibaba.dubbo.config.AbstractConfig;
-import com.alibaba.dubbo.config.ApplicationConfig;
-import com.alibaba.dubbo.config.ConsumerConfig;
-import com.alibaba.dubbo.config.ModuleConfig;
-import com.alibaba.dubbo.config.MonitorConfig;
-import com.alibaba.dubbo.config.ProtocolConfig;
-import com.alibaba.dubbo.config.ProviderConfig;
-import com.alibaba.dubbo.config.ReferenceConfig;
-import com.alibaba.dubbo.config.RegistryConfig;
-import com.alibaba.dubbo.config.ServiceConfig;
+import com.alibaba.dubbo.config.*;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
-
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -56,15 +45,14 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * AnnotationBean
  *
- * @author william.liangf
  * @export
  */
+@Deprecated
 public class AnnotationBean extends AbstractConfig implements DisposableBean, BeanFactoryPostProcessor, BeanPostProcessor, ApplicationContextAware {
 
     private static final long serialVersionUID = -7582802454287589552L;
 
     private static final Logger logger = LoggerFactory.getLogger(Logger.class);
-
     private final Set<ServiceConfig<?>> serviceConfigs = new ConcurrentHashSet<ServiceConfig<?>>();
     private final ConcurrentMap<String, ReferenceBean<?>> referenceConfigs = new ConcurrentHashMap<String, ReferenceBean<?>>();
     private String annotationPackage;
@@ -132,19 +120,16 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
         if (!isMatchPackage(bean)) {
             return bean;
         }
-        Class<?> clazz = bean.getClass();
-        if(isProxyBean(bean)){
-            clazz = AopUtils.getTargetClass(bean);
-        }
-        Service service = clazz.getAnnotation(Service.class);
+        Service service = bean.getClass().getAnnotation(Service.class);
         if (service != null) {
             ServiceBean<Object> serviceConfig = new ServiceBean<Object>(service);
+            serviceConfig.setRef(bean);
             if (void.class.equals(service.interfaceClass())
                     && "".equals(service.interfaceName())) {
-                if (clazz.getInterfaces().length > 0) {
-                    serviceConfig.setInterface(clazz.getInterfaces()[0]);
+                if (bean.getClass().getInterfaces().length > 0) {
+                    serviceConfig.setInterface(bean.getClass().getInterfaces()[0]);
                 } else {
-                    throw new IllegalStateException("Failed to export remote service class " + clazz.getName() + ", cause: The @Service undefined interfaceClass or interfaceName, and the service class unimplemented any interfaces.");
+                    throw new IllegalStateException("Failed to export remote service class " + bean.getClass().getName() + ", cause: The @Service undefined interfaceClass or interfaceName, and the service class unimplemented any interfaces.");
                 }
             }
             if (applicationContext != null) {
@@ -177,7 +162,6 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
                 }
                 if (service.protocol() != null && service.protocol().length > 0) {
                     List<ProtocolConfig> protocolConfigs = new ArrayList<ProtocolConfig>();
-                    // modified by lishen; fix dubbo's bug
                     for (String protocolId : service.protocol()) {
                         if (protocolId != null && protocolId.length() > 0) {
                             protocolConfigs.add((ProtocolConfig) applicationContext.getBean(protocolId, ProtocolConfig.class));
@@ -193,7 +177,6 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
                     throw new IllegalStateException(e.getMessage(), e);
                 }
             }
-            serviceConfig.setRef(bean);
             serviceConfigs.add(serviceConfig);
             serviceConfig.export();
         }
@@ -205,11 +188,7 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
         if (!isMatchPackage(bean)) {
             return bean;
         }
-        Class<?> clazz = bean.getClass();
-        if(isProxyBean(bean)){
-            clazz = AopUtils.getTargetClass(bean);
-        }
-        Method[] methods = clazz.getMethods();
+        Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
             String name = method.getName();
             if (name.length() > 3 && name.startsWith("set")
@@ -217,37 +196,33 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
                     && Modifier.isPublic(method.getModifiers())
                     && !Modifier.isStatic(method.getModifiers())) {
                 try {
-                	Reference reference = method.getAnnotation(Reference.class);
-                	if (reference != null) {
-	                	Object value = refer(reference, method.getParameterTypes()[0]);
-	                	if (value != null) {
-	                		method.invoke(bean, new Object[] { value });
-	                	}
-                	}
-                } catch (Exception e) {
-                    // modified by lishen
-                    throw new BeanInitializationException("Failed to init remote service reference at method " + name + " in class " + bean.getClass().getName(), e);
-//                    logger.error("Failed to init remote service reference at method " + name + " in class " + bean.getClass().getName() + ", cause: " + e.getMessage(), e);
+                    Reference reference = method.getAnnotation(Reference.class);
+                    if (reference != null) {
+                        Object value = refer(reference, method.getParameterTypes()[0]);
+                        if (value != null) {
+                            method.invoke(bean, new Object[]{value});
+                        }
+                    }
+                } catch (Throwable e) {
+                    logger.error("Failed to init remote service reference at method " + name + " in class " + bean.getClass().getName() + ", cause: " + e.getMessage(), e);
                 }
             }
         }
-        Field[] fields = clazz.getDeclaredFields();
+        Field[] fields = bean.getClass().getDeclaredFields();
         for (Field field : fields) {
             try {
                 if (!field.isAccessible()) {
                     field.setAccessible(true);
                 }
                 Reference reference = field.getAnnotation(Reference.class);
-            	if (reference != null) {
-	                Object value = refer(reference, field.getType());
-	                if (value != null) {
-	                	field.set(bean, value);
-	                }
-            	}
-            } catch (Exception e) {
-                // modified by lishen
-                throw new BeanInitializationException("Failed to init remote service reference at filed " + field.getName() + " in class " + bean.getClass().getName(), e);
-//            	logger.error("Failed to init remote service reference at filed " + field.getName() + " in class " + bean.getClass().getName() + ", cause: " + e.getMessage(), e);
+                if (reference != null) {
+                    Object value = refer(reference, field.getType());
+                    if (value != null) {
+                        field.set(bean, value);
+                    }
+                }
+            } catch (Throwable e) {
+                logger.error("Failed to init remote service reference at filed " + field.getName() + " in class " + bean.getClass().getName() + ", cause: " + e.getMessage(), e);
             }
         }
         return bean;
@@ -317,21 +292,13 @@ public class AnnotationBean extends AbstractConfig implements DisposableBean, Be
         if (annotationPackages == null || annotationPackages.length == 0) {
             return true;
         }
-        Class clazz = bean.getClass();
-        if(isProxyBean(bean)){
-            clazz = AopUtils.getTargetClass(bean);
-        }
-        String beanClassName = clazz.getName();
+        String beanClassName = bean.getClass().getName();
         for (String pkg : annotationPackages) {
             if (beanClassName.startsWith(pkg)) {
                 return true;
             }
         }
         return false;
-    }
-
-    private boolean isProxyBean(Object bean) {
-        return AopUtils.isAopProxy(bean);
     }
 
 }
