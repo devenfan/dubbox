@@ -50,11 +50,12 @@ public class ContextFilter implements Filter {
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)
-//                .setAttachments(attachments)  // modified by lishen
+//                .setAttachments(attachments)  // merged from dubbox
                 .setLocalAddress(invoker.getUrl().getHost(),
                         invoker.getUrl().getPort());
 
-        // modified by lishen
+        // mreged from dubbox
+        // we may already added some attachments into RpcContext before this filter (e.g. in rest protocol)
         if (attachments != null) {
             if (RpcContext.getContext().getAttachments() != null) {
                 RpcContext.getContext().getAttachments().putAll(attachments);

@@ -44,14 +44,15 @@ import java.util.concurrent.TimeoutException;
  * @see com.alibaba.dubbo.rpc.filter.ContextFilter
  */
 public class RpcContext {
-	
-	private static final ThreadLocal<RpcContext> LOCAL = new ThreadLocal<RpcContext>() {
-		@Override
-		protected RpcContext initialValue() {
-			return new RpcContext();
-		}
-	};
 
+    private static final ThreadLocal<RpcContext> LOCAL = new ThreadLocal<RpcContext>() {
+        @Override
+        protected RpcContext initialValue() {
+            return new RpcContext();
+        }
+    };
+    private final Map<String, String> attachments = new HashMap<String, String>();
+    private final Map<String, Object> values = new HashMap<String, Object>();
     private Future<?> future;
 
     private List<URL> urls;
@@ -64,32 +65,23 @@ public class RpcContext {
 
     private Object[] arguments;
 
-	private InetSocketAddress localAddress;
+    private InetSocketAddress localAddress;
 
-	private InetSocketAddress remoteAddress;
-
-    private final Map<String, String> attachments = new HashMap<String, String>();
-    private final Map<String, Object> values = new HashMap<String, Object>();
+    private InetSocketAddress remoteAddress;
+    @Deprecated
+    private List<Invoker<?>> invokers;
+    @Deprecated
+    private Invoker<?> invoker;
+    @Deprecated
+    private Invocation invocation;
 
     // now we don't use the 'values' map to hold these objects
     // we want these objects to be as generic as possible
     private Object request;
     private Object response;
 
-	@Deprecated
-    private List<Invoker<?>> invokers;
-    
-	@Deprecated
-    private Invoker<?> invoker;
-
-	@Deprecated
-    private Invocation invocation;
-
-    // ------------------------------------------------
-
     protected RpcContext() {
-	}
-
+    }
 
     /**
      * get context.
@@ -109,12 +101,56 @@ public class RpcContext {
         LOCAL.remove();
     }
 
+    /**
+     * Get the request object of the underlying RPC protocol, e.g. HttpServletRequest
+     *
+     * @return null if the underlying protocol doesn't provide support for getting request
+     */
+    public Object getRequest() {
+        return request;
+    }
+
+    /**
+     * Get the request object of the underlying RPC protocol, e.g. HttpServletRequest
+     *
+     * @return null if the underlying protocol doesn't provide support for getting request or the request is not of the specified type
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getRequest(Class<T> clazz) {
+        return (request != null && clazz.isAssignableFrom(request.getClass())) ? (T) request : null;
+    }
 
 
+    public void setRequest(Object request) {
+        this.request = request;
+    }
+
+    /**
+     * Get the response object of the underlying RPC protocol, e.g. HttpServletResponse
+     *
+     * @return null if the underlying protocol doesn't provide support for getting response
+     */
+    public Object getResponse() {
+        return response;
+    }
+
+    /**
+     * Get the response object of the underlying RPC protocol, e.g. HttpServletResponse
+     *
+     * @return null if the underlying protocol doesn't provide support for getting response or the response is not of the specified type
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getResponse(Class<T> clazz) {
+        return (response != null && clazz.isAssignableFrom(response.getClass())) ? (T) response : null;
+    }
+
+    public void setResponse(Object response) {
+        this.response = response;
+    }
 
     /**
      * is provider side.
-     * 
+     *
      * @return provider side.
      */
     public boolean isProviderSide() {
@@ -159,26 +195,6 @@ public class RpcContext {
         return url.getPort() == address.getPort() &&
                 NetUtils.filterLocalHost(url.getIp()).equals(NetUtils.filterLocalHost(host));
     }
-
-
-
-    /**
-     * @deprecated Replace to isProviderSide()
-     */
-    @Deprecated
-    public boolean isServerSide() {
-        return isProviderSide();
-    }
-
-    /**
-     * @deprecated Replace to isConsumerSide()
-     */
-    @Deprecated
-    public boolean isClientSide() {
-        return isConsumerSide();
-    }
-
-    // ------------------------------------------------
 
     /**
      * get future.
@@ -257,22 +273,11 @@ public class RpcContext {
 
     /**
      * set local address.
-     * 
-     * @param address
+     *
+     * @param host
+     * @param port
      * @return context
      */
-	public RpcContext setLocalAddress(InetSocketAddress address) {
-	    this.localAddress = address;
-	    return this;
-	}
-
-	/**
-	 * set local address.
-	 * 
-	 * @param host
-	 * @param port
-	 * @return context
-	 */
     public RpcContext setLocalAddress(String host, int port) {
         if (port < 0) {
             port = 0;
@@ -281,17 +286,27 @@ public class RpcContext {
         return this;
     }
 
-	/**
-	 * get local address.
-	 * 
-	 * @return local address
-	 */
-	public InetSocketAddress getLocalAddress() {
-		return localAddress;
-	}
+    /**
+     * get local address.
+     *
+     * @return local address
+     */
+    public InetSocketAddress getLocalAddress() {
+        return localAddress;
+    }
 
+    /**
+     * set local address.
+     *
+     * @param address
+     * @return context
+     */
+    public RpcContext setLocalAddress(InetSocketAddress address) {
+        this.localAddress = address;
+        return this;
+    }
 
-	public String getLocalAddressString() {
+    public String getLocalAddressString() {
         return getLocalHost() + ":" + getLocalPort();
     }
 
@@ -310,18 +325,7 @@ public class RpcContext {
 
     /**
      * set remote address.
-     * 
-     * @param address
-     * @return context
-     */
-    public RpcContext setRemoteAddress(InetSocketAddress address) {
-        this.remoteAddress = address;
-        return this;
-    }
-    
-    /**
-     * set remote address.
-     * 
+     *
      * @param host
      * @param port
      * @return context
@@ -334,32 +338,43 @@ public class RpcContext {
         return this;
     }
 
-	/**
-	 * get remote address.
-	 * 
-	 * @return remote address
-	 */
-	public InetSocketAddress getRemoteAddress() {
-		return remoteAddress;
-	}
-	
-	/**
-	 * get remote address string.
-	 * 
-	 * @return remote address string.
-	 */
-	public String getRemoteAddressString() {
-	    return getRemoteHost() + ":" + getRemotePort();
-	}
-	
-	/**
-	 * get remote host name.
-	 * 
-	 * @return remote host name
-	 */
-	public String getRemoteHostName() {
-		return remoteAddress == null ? null : remoteAddress.getHostName();
-	}
+    /**
+     * get remote address.
+     *
+     * @return remote address
+     */
+    public InetSocketAddress getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    /**
+     * set remote address.
+     *
+     * @param address
+     * @return context
+     */
+    public RpcContext setRemoteAddress(InetSocketAddress address) {
+        this.remoteAddress = address;
+        return this;
+    }
+
+    /**
+     * get remote address string.
+     *
+     * @return remote address string.
+     */
+    public String getRemoteAddressString() {
+        return getRemoteHost() + ":" + getRemotePort();
+    }
+
+    /**
+     * get remote host name.
+     *
+     * @return remote host name
+     */
+    public String getRemoteHostName() {
+        return remoteAddress == null ? null : remoteAddress.getHostName();
+    }
 
     /**
      * get local host.
@@ -515,59 +530,21 @@ public class RpcContext {
         return values.get(key);
     }
 
-
-
     /**
-     * Get the request object of the underlying RPC protocol, e.g. HttpServletRequest
-     *
-     * @return null if the underlying protocol doesn't provide support for getting request
+     * @deprecated Replace to isProviderSide()
      */
-    public Object getRequest() {
-        return request;
+    @Deprecated
+    public boolean isServerSide() {
+        return isProviderSide();
     }
 
     /**
-     * Get the request object of the underlying RPC protocol, e.g. HttpServletRequest
-     *
-     * @return null if the underlying protocol doesn't provide support for getting request or the request is not of the specified type
+     * @deprecated Replace to isConsumerSide()
      */
-    @SuppressWarnings("unchecked")
-    public <T> T getRequest(Class<T> clazz) {
-        return (request != null && clazz.isAssignableFrom(request.getClass())) ? (T) request : null;
+    @Deprecated
+    public boolean isClientSide() {
+        return isConsumerSide();
     }
-
-
-    public void setRequest(Object request) {
-        this.request = request;
-    }
-
-    /**
-     * Get the response object of the underlying RPC protocol, e.g. HttpServletResponse
-     *
-     * @return null if the underlying protocol doesn't provide support for getting response
-     */
-    public Object getResponse() {
-        return response;
-    }
-
-    /**
-     * Get the response object of the underlying RPC protocol, e.g. HttpServletResponse
-     *
-     * @return null if the underlying protocol doesn't provide support for getting response or the response is not of the specified type
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T getResponse(Class<T> clazz) {
-        return (response != null && clazz.isAssignableFrom(response.getClass())) ? (T) response : null;
-    }
-
-    public void setResponse(Object response) {
-        this.response = response;
-    }
-
-
-
-
-
 
     /**
      * @deprecated Replace to getUrls()
@@ -624,8 +601,6 @@ public class RpcContext {
         return this;
     }
 
-    // ------------------------------------------------
-    
     /**
      * Async invocation. Timeout will be handled even if <code>Future.get()</code> is not called.
      *

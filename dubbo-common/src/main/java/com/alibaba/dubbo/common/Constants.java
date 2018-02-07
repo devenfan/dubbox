@@ -135,7 +135,7 @@ public class Constants {
 
     public static final int DEFAULT_CONNECT_TIMEOUT = 3000;
 
-    public static final int DEFAULT_REGISTRY_CONNECT_TIMEOUT   = 5000;
+//    public static final int DEFAULT_REGISTRY_CONNECT_TIMEOUT = 5000;
 
     public static final int DEFAULT_RETRIES = 2;
 
@@ -263,14 +263,10 @@ public class Constants {
 
     public static final String SERIALIZATION_KEY = "serialization";
 
-    // modified by lishen
     public static final String EXTENSION_KEY = "extension";
 
-    // modified by lishen
     public static final String KEEP_ALIVE_KEY = "keepalive";
 
-    // modified by lishen
-    // TODO change to a better name
     public static final String OPTIMIZER_KEY = "optimizer";
 
     public static final String EXCHANGER_KEY = "exchanger";
@@ -622,6 +618,12 @@ public class Constants {
     public static final String BIND_PORT_KEY = "bind.port";
 
     public static final String REGISTER_IP_KEY = "register.ip";
+
+    public static final String QOS_ENABLE = "qos.enable";
+
+    public static final String QOS_PORT = "qos.port";
+
+    public static final String ACCEPT_FOREIGN_IP = "qos.accept.foreign.ip";
 
     /*
      * private Constants(){ }

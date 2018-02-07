@@ -167,4 +167,8 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         }
     }
 
+    @Override
+    public void destroy() {
+        // do nothing
+    }
 }
