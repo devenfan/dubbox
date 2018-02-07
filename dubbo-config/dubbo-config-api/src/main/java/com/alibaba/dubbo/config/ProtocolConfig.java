@@ -20,6 +20,7 @@ import com.alibaba.dubbo.common.extension.ExtensionLoader;
 import com.alibaba.dubbo.common.serialize.Serialization;
 import com.alibaba.dubbo.common.status.StatusChecker;
 import com.alibaba.dubbo.common.threadpool.ThreadPool;
+import com.alibaba.dubbo.common.utils.ConfigUtils;
 import com.alibaba.dubbo.config.support.Parameter;
 import com.alibaba.dubbo.registry.support.AbstractRegistryFactory;
 import com.alibaba.dubbo.remoting.Codec;
@@ -120,20 +121,20 @@ public class ProtocolConfig extends AbstractConfig {
     private Boolean register;
 
     // parameters
-    private Map<String, String> parameters;
-
-    // if it's default
-    private Boolean isDefault;
-
     // 是否长连接
     // TODO add this to provider config
     private Boolean keepAlive;
 
-    // 序列化的优化器的实现类名
     // TODO add this to provider config
     private String optimizer;
 
     private String extension;
+
+    // parameters
+    private Map<String, String> parameters;
+
+    // if it's default
+    private Boolean isDefault;
 
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
 
@@ -155,6 +156,14 @@ public class ProtocolConfig extends AbstractConfig {
             return;
         }
         AbstractRegistryFactory.destroyAll();
+
+        // Wait for registry notification
+        try {
+            Thread.sleep(ConfigUtils.getServerShutdownTimeout());
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");
+        }
+
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         for (String protocolName : loader.getLoadedExtensions()) {
             try {
@@ -479,10 +488,8 @@ public class ProtocolConfig extends AbstractConfig {
 
     public void destory() {
         if (name != null) {
-            ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).destroy();;
+            ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).destroy();
         }
     }
-
-
 
 }

@@ -48,8 +48,6 @@ import java.io.InputStream;
  */
 public class ExchangeCodec extends TelnetCodec {
 
-    private static final Logger logger = LoggerFactory.getLogger(ExchangeCodec.class);
-
     // header length.
     protected static final int HEADER_LENGTH = 16;
     // magic header.
@@ -61,6 +59,7 @@ public class ExchangeCodec extends TelnetCodec {
     protected static final byte FLAG_TWOWAY = (byte) 0x40;
     protected static final byte FLAG_EVENT = (byte) 0x20;
     protected static final int SERIALIZATION_MASK = 0x1f;
+    private static final Logger logger = LoggerFactory.getLogger(ExchangeCodec.class);
 
     public Short getMagicCode() {
         return MAGIC;
@@ -74,13 +73,6 @@ public class ExchangeCodec extends TelnetCodec {
         } else {
             super.encode(channel, buffer, msg);
         }
-
-        // TODO modified by lishen
-//        System.out.println(">>>>>>>>>>>>>>>>>>>>>> the resulting byte size of encoding is " + buffer.readableBytes());
-        if (logger.isTraceEnabled()) {
-            logger.trace("the resulting byte size of encoding is " + buffer.readableBytes());
-        }
-
     }
 
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
@@ -233,20 +225,15 @@ public class ExchangeCodec extends TelnetCodec {
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
         ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
-        try {
-            if (req.isEvent()) {
-                encodeEventData(channel, out, req.getData());
-            } else {
-                encodeRequestData(channel, out, req.getData());
-            }
-            out.flushBuffer();
-        } finally {
-            // modified by lishen
-            if (out instanceof Cleanable) {
-                ((Cleanable) out).cleanup();
-            }
+        if (req.isEvent()) {
+            encodeEventData(channel, out, req.getData());
+        } else {
+            encodeRequestData(channel, out, req.getData());
         }
-
+        out.flushBuffer();
+        if (out instanceof Cleanable) {
+            ((Cleanable) out).cleanup();
+        }
         bos.flush();
         bos.close();
         int len = bos.writtenBytes();
@@ -279,24 +266,18 @@ public class ExchangeCodec extends TelnetCodec {
             buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
             ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
             ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
-            try {
-                // encode response data or error message.
-                if (status == Response.OK) {
-                    if (res.isHeartbeat()) {
-                        encodeHeartbeatData(channel, out, res.getResult());
-                    } else {
-                        encodeResponseData(channel, out, res.getResult());
-                    }
+            // encode response data or error message.
+            if (status == Response.OK) {
+                if (res.isHeartbeat()) {
+                    encodeHeartbeatData(channel, out, res.getResult());
+                } else {
+                    encodeResponseData(channel, out, res.getResult());
                 }
-                else out.writeUTF(res.getErrorMessage());
-                out.flushBuffer();
-            } finally {
-                // modified by lishen
-                if (out instanceof Cleanable) {
-                    ((Cleanable) out).cleanup();
-                }
+            } else out.writeUTF(res.getErrorMessage());
+            out.flushBuffer();
+            if (out instanceof Cleanable) {
+                ((Cleanable) out).cleanup();
             }
-
             bos.flush();
             bos.close();
 
